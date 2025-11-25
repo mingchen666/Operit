@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
@@ -39,6 +40,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.AttachmentInfo
 import com.ai.assistance.operit.data.model.ChatMessage
+import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.ui.floating.FloatingChatWindow
@@ -56,6 +58,7 @@ interface FloatingWindowCallback {
     fun saveState()
     fun getColorScheme(): ColorScheme?
     fun getTypography(): Typography?
+    fun getInputProcessingState(): State<InputProcessingState>
 }
 
 class FloatingWindowManager(
@@ -156,7 +159,8 @@ class FloatingWindowManager(
                 onAttachmentRequest = { callback.onAttachmentRequest(it) },
                 onRemoveAttachment = { callback.onRemoveAttachment(it) },
                 chatService = context as? FloatingChatService,
-                windowState = state
+                windowState = state,
+                inputProcessingState = callback.getInputProcessingState()
         )
     }
 
@@ -492,9 +496,10 @@ class FloatingWindowManager(
                 val width = (state.windowWidth.value.value * density * state.lastWindowScale).toInt()
                 val height = (state.windowHeight.value.value * density * state.lastWindowScale).toInt()
                 
-                val (tempX, tempY) = if (state.previousMode == FloatingMode.BALL ||
-                                    state.previousMode == FloatingMode.VOICE_BALL
-                    ) {
+                val isFromBall = state.previousMode == FloatingMode.BALL || 
+                                state.previousMode == FloatingMode.VOICE_BALL
+
+                val (tempX, tempY) = if (isFromBall) {
                                 calculateCenteredPosition(
                         startX, startY, startWidth, startHeight,
                         width, height
@@ -505,13 +510,25 @@ class FloatingWindowManager(
                     state.windowScale.value = state.lastWindowScale
 
                     // Coerce position to be within screen bounds for window mode
-                val minVisibleWidth = (width * 2 / 3)
-                val minVisibleHeight = (height * 2 / 3)
-                val finalX = tempX.coerceIn(
-                    -(width - minVisibleWidth),
-                                    screenWidth - minVisibleWidth / 2
-                            )
-                val finalY = tempY.coerceIn(0, screenHeight - minVisibleHeight)
+                val finalX: Int
+                val finalY: Int
+                
+                if (isFromBall) {
+                    // Limit strictly within screen when expanding from ball
+                    val maxX = (screenWidth - width).coerceAtLeast(0)
+                    val maxY = (screenHeight - height).coerceAtLeast(0)
+                    finalX = tempX.coerceIn(0, maxX)
+                    finalY = tempY.coerceIn(0, maxY)
+                } else {
+                    val minVisibleWidth = (width * 2 / 3)
+                    val minVisibleHeight = (height * 2 / 3)
+                    finalX = tempX.coerceIn(
+                        -(width - minVisibleWidth),
+                        screenWidth - minVisibleWidth / 2
+                    )
+                    finalY = tempY.coerceIn(0, screenHeight - minVisibleHeight)
+                }
+                
                 TargetParams(width, height, finalX, finalY, flags)
                 }
                 FloatingMode.FULLSCREEN -> {

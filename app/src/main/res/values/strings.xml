@@ -3213,7 +3213,7 @@
     <string name="copy_result">复制结果</string>
     <string name="tool_call_parameters">调用参数</string>
     <string name="tool_call">工具调用</string>
-    <string name="lines_count">%d 行</string>
+    <string name="lines_count">行</string>
     <string name="edit_message">编辑消息</string>
     <string name="visual">可视化</string>
     <string name="plain_text">纯文本</string>

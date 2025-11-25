@@ -27,8 +27,7 @@ class FloatingWindowDelegate(
     private val coroutineScope: CoroutineScope,
     private val inputProcessingState: StateFlow<InputProcessingState>,
     private val chatHistoryFlow: StateFlow<List<ChatMessage>>? = null,
-    private val chatHistoryDelegate: ChatHistoryDelegate? = null,
-    private val onMinimizeApp: (() -> Unit)? = null // 最小化应用的回调
+    private val chatHistoryDelegate: ChatHistoryDelegate? = null
 ) {
     companion object {
         private const val TAG = "FloatingWindowDelegate"
@@ -102,9 +101,6 @@ class FloatingWindowDelegate(
                 context.startService(intent)
             }
             context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-
-            // 服务启动后再最小化应用，确保应用存活
-            onMinimizeApp?.invoke()
         } else {
             // 统一调用关闭逻辑，确保服务被正确关闭
             floatingService?.onClose()
@@ -145,9 +141,6 @@ class FloatingWindowDelegate(
             context.startService(intent)
         }
         context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-
-        // 服务启动后再最小化应用，确保应用存活
-        onMinimizeApp?.invoke()
     }
 
     /**

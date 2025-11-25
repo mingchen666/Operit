@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ai.assistance.operit.data.model.AttachmentInfo
 import com.ai.assistance.operit.data.model.ChatMessage
+import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.services.floating.FloatingWindowState
@@ -45,7 +46,8 @@ fun rememberFloatContext(
         onRemoveAttachment: ((String) -> Unit)? = null,
         onInputFocusRequest: ((Boolean) -> Unit)? = null,
         chatService: FloatingChatService? = null,
-        windowState: FloatingWindowState? = null
+        windowState: FloatingWindowState? = null,
+        inputProcessingState: State<InputProcessingState> = mutableStateOf(InputProcessingState.Idle)
 ): FloatContext {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
@@ -68,7 +70,8 @@ fun rememberFloatContext(
             onRemoveAttachment,
             onInputFocusRequest,
             chatService,
-            windowState
+            windowState,
+            inputProcessingState // State object itself is stable reference
     ) {
         FloatContext(
                 initialMessages = messages,
@@ -99,7 +102,8 @@ fun rememberFloatContext(
                 density = density,
                 coroutineScope = scope,
                 chatService = chatService,
-                windowState = windowState
+                windowState = windowState,
+                inputProcessingState = inputProcessingState
         )
     }
 
@@ -115,6 +119,8 @@ fun rememberFloatContext(
         floatContext.currentX = currentX
         floatContext.currentY = currentY
         floatContext.attachments = attachments
+        // inputProcessingState is a State object held by FloatContext, no need to update it via SideEffect
+        // as the State object reference doesn't change, but its .value will change.
     }
 
     return floatContext
@@ -150,7 +156,8 @@ class FloatContext(
         val density: Density,
         val coroutineScope: CoroutineScope,
         val chatService: FloatingChatService? = null,
-        val windowState: FloatingWindowState? = null
+        val windowState: FloatingWindowState? = null,
+        val inputProcessingState: State<InputProcessingState>
 ) {
     // 使用 mutableStateOf 让 Compose 能感知变化
     var messages by mutableStateOf(initialMessages)
@@ -163,6 +170,7 @@ class FloatContext(
     var currentX by mutableStateOf(initialX)
     var currentY by mutableStateOf(initialY)
     var attachments by mutableStateOf(initialAttachments)
+    // inputProcessingState is a State object, accessed directly
 
     // 动画与转换相关状态
     val animatedAlpha = Animatable(1f)

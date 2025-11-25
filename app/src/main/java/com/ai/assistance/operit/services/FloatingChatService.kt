@@ -16,12 +16,14 @@ import android.util.Log
 import android.view.View
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Typography
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Lifecycle
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.data.model.AttachmentInfo
 import com.ai.assistance.operit.data.model.ChatMessage
+import com.ai.assistance.operit.data.model.InputProcessingState
 import com.ai.assistance.operit.data.model.SerializableColorScheme
 import com.ai.assistance.operit.data.model.SerializableTypography
 import com.ai.assistance.operit.data.model.toComposeColorScheme
@@ -53,6 +55,7 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     private lateinit var lifecycleOwner: ServiceLifecycleOwner
     private val chatMessages = mutableStateOf<List<ChatMessage>>(emptyList())
     private val attachments = mutableStateOf<List<AttachmentInfo>>(emptyList())
+    private val inputProcessingState = mutableStateOf<InputProcessingState>(InputProcessingState.Idle)
 
     // 聊天服务核心 - 整合所有业务逻辑
     private lateinit var chatCore: ChatServiceCore
@@ -162,6 +165,14 @@ class FloatingChatService : Service(), FloatingWindowCallback {
                 chatCore.attachments.collect { newAttachments ->
                     attachments.value = newAttachments
                     Log.d(TAG, "附件列表已更新: ${newAttachments.size} 个附件")
+                }
+            }
+
+            // 订阅输入处理状态更新
+            serviceScope.launch {
+                chatCore.inputProcessingState.collect { state ->
+                    inputProcessingState.value = state
+                    Log.d(TAG, "输入处理状态已更新: $state")
                 }
             }
             
@@ -498,6 +509,8 @@ class FloatingChatService : Service(), FloatingWindowCallback {
     override fun getMessages(): List<ChatMessage> = chatMessages.value
 
     override fun getAttachments(): List<AttachmentInfo> = attachments.value
+
+    override fun getInputProcessingState(): State<InputProcessingState> = inputProcessingState
 
     override fun getColorScheme(): ColorScheme? = colorScheme.value
 

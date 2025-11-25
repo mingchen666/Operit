@@ -5,6 +5,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -42,6 +44,7 @@ fun ScrollToBottomButton(
     modifier: Modifier = Modifier
 ) {
     var showScrollButton by remember { mutableStateOf(false) }
+    val isDragged by scrollState.interactionSource.collectIsDraggedAsState()
 
     // 核心滚动逻辑 - 监听用户的手动滚动行为
     LaunchedEffect(scrollState) {
@@ -49,12 +52,13 @@ fun ScrollToBottomButton(
         snapshotFlow { scrollState.value }
             .distinctUntilChanged()
             .collect { currentPosition ->
-                // isScrollInProgress 仅在用户触摸屏幕并拖动时为 true
+                // isScrollInProgress 为 true 表示正在滚动（包括动画和手势）
                 if (scrollState.isScrollInProgress) {
                     val scrolledUp = currentPosition < lastPosition
                     if (scrolledUp) {
                         // 用户向上滚动，禁用自动滚动并显示按钮
-                        if (autoScrollToBottom) {
+                        // 只有在用户实际拖动时才禁用自动滚动，避免被自动滚动动画触发
+                        if (autoScrollToBottom && isDragged) {
                             onAutoScrollToBottomChange(false)
                             showScrollButton = true
                         }

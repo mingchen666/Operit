@@ -3205,7 +3205,7 @@
     <string name="copy_result">Copy Result</string>
     <string name="tool_call_parameters">Call Parameters</string>
     <string name="tool_call">Tool Call</string>
-    <string name="lines_count">%d lines</string>
+    <string name="lines_count">lines</string>
     <string name="edit_message">Edit Message</string>
     <string name="visual">Visual</string>
     <string name="plain_text">Plain Text</string>

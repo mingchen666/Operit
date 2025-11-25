@@ -104,14 +104,6 @@ fun AIChatScreen(
 // Correctly initialize ViewModel using the viewModel() composable function
 val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(context.applicationContext) }
 
-    // 设置最小化应用的回调
-    LaunchedEffect(Unit) {
-        actualViewModel.setMinimizeAppCallback {
-            // 将应用移至后台
-            (context as? android.app.Activity)?.moveTaskToBack(true)
-        }
-    }
-
     // 设置权限系统的颜色方案
     LaunchedEffect(colorScheme) { actualViewModel.setPermissionSystemColorScheme(colorScheme) }
 
@@ -323,7 +315,7 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
     }
 
     // 自动滚动处理 - 仅在消息数量变化时触发
-    LaunchedEffect(chatHistory.size) {
+    LaunchedEffect(chatHistory.size, scrollState.maxValue) {
         if (autoScrollToBottom) {
             try {
                 scrollState.animateScrollTo(scrollState.maxValue)
