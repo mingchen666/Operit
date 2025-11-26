@@ -21,6 +21,7 @@ import com.ai.assistance.operit.data.model.PromptFunctionType
 import com.ai.assistance.operit.services.FloatingChatService
 import com.ai.assistance.operit.services.floating.FloatingWindowState
 import com.ai.assistance.operit.ui.floating.ui.ball.FloatingChatBallMode
+import com.ai.assistance.operit.ui.floating.ui.ball.FloatingResultDisplay
 import com.ai.assistance.operit.ui.floating.ui.ball.FloatingVoiceBallMode
 import com.ai.assistance.operit.ui.floating.ui.fullscreen.FloatingFullscreenMode
 import com.ai.assistance.operit.ui.floating.ui.window.screen.FloatingChatWindowMode
@@ -189,6 +190,7 @@ fun FloatingChatWindow(
             }
             FloatingMode.VOICE_BALL -> FloatingVoiceBallMode(floatContext = floatContext)
             FloatingMode.FULLSCREEN -> FloatingFullscreenMode(floatContext = floatContext)
+            FloatingMode.RESULT_DISPLAY -> FloatingResultDisplay(floatContext = floatContext)
         }
     }
 }

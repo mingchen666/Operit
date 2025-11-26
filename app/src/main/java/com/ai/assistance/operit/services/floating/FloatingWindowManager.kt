@@ -336,6 +336,19 @@ class FloatingWindowManager(
                                 screenHeight - (params.height / 2) - safeMargin
                         )
             }
+            FloatingMode.RESULT_DISPLAY -> {
+                params.width = WindowManager.LayoutParams.WRAP_CONTENT
+                params.height = WindowManager.LayoutParams.WRAP_CONTENT
+                params.flags =
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                
+                // 保持位置逻辑与球体类似，确保可见
+                val ballSizeInPx = (state.ballSize.value.value * density).toInt()
+                val minVisible = ballSizeInPx / 2
+                state.x = state.x.coerceIn(-ballSizeInPx + minVisible, screenWidth - minVisible)
+                state.y = state.y.coerceIn(0, screenHeight - minVisible)
+            }
         }
 
         params.x = state.x
@@ -436,6 +449,9 @@ class FloatingWindowManager(
             FloatingMode.FULLSCREEN -> {
                 // Leaving fullscreen, no special state to save
             }
+            FloatingMode.RESULT_DISPLAY -> {
+                // Leaving result display, no special state to save
+            }
         }
 
         state.currentMode.value = newMode
@@ -447,7 +463,8 @@ class FloatingWindowManager(
             val height: Int,
             val x: Int,
             val y: Int,
-            val flags: Int
+            val flags: Int,
+            val gravity: Int = Gravity.TOP or Gravity.START
         )
 
         val target = when (newMode) {
@@ -462,6 +479,9 @@ class FloatingWindowManager(
                     val rightX = screenWidth - ballSizeInPx
                     val centerY = (screenHeight - ballSizeInPx) / 2
                     Pair(rightX, centerY)
+                } else if (state.previousMode == FloatingMode.RESULT_DISPLAY) {
+                    // 从结果展示模式切回时，直接恢复到原来的位置
+                    Pair(state.lastBallPositionX, state.lastBallPositionY)
                 } else {
                     // 处理 MATCH_PARENT (-1) 的情况，使用实际屏幕尺寸
                     val actualStartWidth = if (startWidth == WindowManager.LayoutParams.MATCH_PARENT) {
@@ -535,6 +555,36 @@ class FloatingWindowManager(
                 val flags = 0 // Remove all flags, making it focusable
                 TargetParams(screenWidth, screenHeight, 0, 0, flags)
             }
+            FloatingMode.RESULT_DISPLAY -> {
+                val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                
+                val ballSizeInPx = (state.ballSize.value.value * density).toInt()
+                val ballCenter = startX + ballSizeInPx / 2
+                
+                val finalGravity: Int
+                val finalX: Int
+                
+                if (ballCenter > screenWidth / 2) {
+                    // 球在右半屏，结果显示在球左侧（右对齐）
+                    finalGravity = Gravity.TOP or Gravity.END
+                    // x 是距离右边的距离
+                    finalX = screenWidth - (startX + ballSizeInPx)
+                } else {
+                    // 球在左半屏，结果显示在球右侧（左对齐）
+                    finalGravity = Gravity.TOP or Gravity.START
+                    finalX = startX
+                }
+
+                TargetParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT, 
+                    WindowManager.LayoutParams.WRAP_CONTENT, 
+                    finalX, 
+                    startY, 
+                    flags,
+                    finalGravity
+                )
+            }
         }
 
         // 判断是否在球模式和其他模式之间切换
@@ -558,6 +608,7 @@ class FloatingWindowManager(
                         params.x = target.x
                         params.y = target.y
                         params.flags = target.flags
+                        params.gravity = target.gravity
                         
                         // Sync state with params
                         state.x = params.x
@@ -578,6 +629,7 @@ class FloatingWindowManager(
                         params.x = target.x
                         params.y = target.y
                         params.flags = target.flags
+                        params.gravity = target.gravity
                         
                         // Sync state with params
                         state.x = params.x
@@ -595,6 +647,7 @@ class FloatingWindowManager(
                     params.x = target.x
                     params.y = target.y
                     params.flags = target.flags
+                    params.gravity = target.gravity
                     
                     // Sync state with params
                     state.x = params.x
@@ -614,6 +667,7 @@ class FloatingWindowManager(
                 params.x = target.x
                 params.y = target.y
                 params.flags = target.flags
+                params.gravity = target.gravity
 
                 // Sync state with params
                 state.x = params.x
