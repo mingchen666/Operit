@@ -810,8 +810,12 @@ val actualViewModel: ChatViewModel = viewModel ?: viewModel { ChatViewModel(cont
                         placeable.placeRelative(0, 0)
                     }
                 } else {
-                    // 当不可见时，我们让布局大小为0，并且完全不测量或放置子项。
-                    layout(0, 0) {}
+                    // 当不可见时，我们强制测量为 0x0 并放置
+                    // 这样可以触发底层 View 的 onSizeChanged，从而通知其暂停渲染
+                    val placeable = measurables.first().measure(Constraints.fixed(0, 0))
+                    layout(0, 0) {
+                        placeable.placeRelative(0, 0)
+                    }
                 }
             }
         }
