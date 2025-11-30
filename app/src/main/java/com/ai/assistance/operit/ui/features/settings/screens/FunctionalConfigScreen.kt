@@ -390,9 +390,14 @@ fun FunctionConfigCard(
                                             val apiPreferences = ApiPreferences.getInstance(context)
                                             val customHeadersJson = apiPreferences.getCustomHeaders()
 
+                                            // 根据 modelIndex 选择具体的模型
+                                            val actualIndex = getValidModelIndex(fullConfig.modelName, currentModelIndex)
+                                            val selectedModelName = getModelByIndex(fullConfig.modelName, actualIndex)
+                                            val configWithSelectedModel = fullConfig.copy(modelName = selectedModelName)
+
                                             val service =
                                                     AIServiceFactory.createService(
-                                                            config = fullConfig,
+                                                            config = configWithSelectedModel,
                                                             customHeadersJson = customHeadersJson,
                                                             modelConfigManager = modelConfigManager,
                                                             context = context

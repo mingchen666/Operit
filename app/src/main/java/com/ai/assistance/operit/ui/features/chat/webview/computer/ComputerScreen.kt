@@ -28,7 +28,8 @@ fun ComputerScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            // 移除背景色，避免遮挡 SurfaceView
+            // .background(Color.Black) 
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null

@@ -38,6 +38,10 @@ fun createAndGetDefaultWorkspace(context: Context, chatId: String, projectType: 
             copyTemplateFiles(context, webContentDir, "go")
             createProjectConfigIfNeeded(webContentDir, ProjectType.GO)
         }
+        "office" -> {
+            copyTemplateFiles(context, webContentDir, "office")
+            createProjectConfigIfNeeded(webContentDir, ProjectType.OFFICE)
+        }
         else -> {
             copyTemplateFiles(context, webContentDir, "web")
             createProjectConfigIfNeeded(webContentDir, ProjectType.WEB)
@@ -73,7 +77,7 @@ fun ensureWorkspaceDirExists(path: String): File {
 }
 
 private enum class ProjectType {
-    WEB, NODE, TYPESCRIPT, PYTHON, JAVA, GO
+    WEB, NODE, TYPESCRIPT, PYTHON, JAVA, GO, OFFICE
 }
 
 private const val DEFAULT_WEB_PROJECT_CONFIG_JSON = """
@@ -379,6 +383,29 @@ private const val DEFAULT_GO_PROJECT_CONFIG_JSON = """
 }
 """
 
+private const val DEFAULT_OFFICE_PROJECT_CONFIG_JSON = """
+{
+    "projectType": "office",
+    "title": "办公文档",
+    "description": "用于文档编辑、文件处理和通用办公任务",
+    "server": {
+        "enabled": false,
+        "port": 8080,
+        "autoStart": false
+    },
+    "preview": {
+        "type": "terminal",
+        "url": "",
+        "showPreviewButton": false,
+        "previewButtonLabel": ""
+    },
+    "commands": [],
+    "export": {
+        "enabled": false
+    }
+}
+"""
+
 /**
  * 从 assets 复制项目模板文件到工作区
  */
@@ -470,6 +497,7 @@ private fun createProjectConfigIfNeeded(workspaceDir: File, projectType: Project
             ProjectType.PYTHON -> DEFAULT_PYTHON_PROJECT_CONFIG_JSON
             ProjectType.JAVA -> DEFAULT_JAVA_PROJECT_CONFIG_JSON
             ProjectType.GO -> DEFAULT_GO_PROJECT_CONFIG_JSON
+            ProjectType.OFFICE -> DEFAULT_OFFICE_PROJECT_CONFIG_JSON
         }
 
         try {

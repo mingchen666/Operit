@@ -84,6 +84,8 @@ fun FileBrowser(
     // 排序方式：0=名称, 1=大小, 2=修改时间
     var sortMode by remember { mutableStateOf(0) }
     var showSortMenu by remember { mutableStateOf(false) }
+    // 是否显示隐藏文件（以.开头）
+    var showHiddenFiles by remember { mutableStateOf(false) }
     
     // 快速路径定义
     val quickPaths = remember {
@@ -290,6 +292,19 @@ fun FileBrowser(
                                 .horizontalScroll(scrollState)
                 )
 
+                // 显示/隐藏隐藏文件按钮
+                IconButton(
+                        onClick = { showHiddenFiles = !showHiddenFiles },
+                        modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                            if (showHiddenFiles) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showHiddenFiles) "隐藏.文件" else "显示.文件",
+                            modifier = Modifier.size(18.dp),
+                            tint = if (showHiddenFiles) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                
                 // 排序按钮
                 Box {
                     IconButton(
@@ -395,7 +410,14 @@ fun FileBrowser(
                         }
                     }
 
-                    items(getSortedFileList(fileList, sortMode)) { item ->
+                    // 根据showHiddenFiles过滤文件列表
+                    val filteredList = if (showHiddenFiles) {
+                        fileList
+                    } else {
+                        fileList.filter { !it.name.startsWith(".") }
+                    }
+                    
+                    items(getSortedFileList(filteredList, sortMode)) { item ->
                         Box { // 使用Box来定位上下文菜单
                             FileListItem(
                                     name = item.name,

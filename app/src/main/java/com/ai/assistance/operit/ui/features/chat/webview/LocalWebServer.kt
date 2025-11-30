@@ -138,6 +138,12 @@ private constructor(
 
     @Throws(IOException::class)
     override fun start() {
+        // 检查服务器是否已经在运行，避免重复启动
+        if (isServerRunning.get()) {
+            Log.d(TAG, "服务器已在端口 $port 上运行，跳过启动")
+            return
+        }
+        
         if (type == ServerType.COMPUTER) {
             val computerRoot = getComputerRootPath()
             Log.d(TAG, "确保AI电脑资源已是最新，路径: ${computerRoot.absolutePath}")
@@ -188,7 +194,7 @@ private constructor(
             ).addCorsHeaders()
         }
 
-        val mimeType = getMimeTypeForFile(uri)
+        val mimeType = getCustomMimeType(uri)
         return try {
             val fstream = FileInputStream(file)
             // Read the file into a byte array to serve it directly.
@@ -306,5 +312,38 @@ private constructor(
         this.addHeader("Access-Control-Max-Age", "3600")
         this.addHeader("Access-Control-Allow-Credentials", "true")
         return this
+    }
+    
+    /**
+     * 确保工作区目录存在
+     */
+    private fun ensureWorkspaceDirExists(path: String) {
+        val dir = File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+            Log.d(TAG, "创建工作区目录: $path")
+        }
+    }
+    
+    /**
+     * 根据文件路径获取MIME类型
+     */
+    private fun getCustomMimeType(uri: String): String {
+        val extension = uri.substringAfterLast('.', "")
+        return when (extension.lowercase()) {
+            "html", "htm" -> "text/html"
+            "css" -> "text/css"
+            "js" -> "application/javascript"
+            "json" -> "application/json"
+            "png" -> "image/png"
+            "jpg", "jpeg" -> "image/jpeg"
+            "gif" -> "image/gif"
+            "svg" -> "image/svg+xml"
+            "ico" -> "image/x-icon"
+            "txt" -> "text/plain"
+            "xml" -> "application/xml"
+            "pdf" -> "application/pdf"
+            else -> "application/octet-stream"
+        }
     }
 }
