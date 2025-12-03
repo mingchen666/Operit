@@ -42,10 +42,6 @@ fun createAndGetDefaultWorkspace(context: Context, chatId: String, projectType: 
             copyTemplateFiles(context, webContentDir, "office")
             createProjectConfigIfNeeded(webContentDir, ProjectType.OFFICE)
         }
-        "android" -> {
-            copyTemplateFiles(context, webContentDir, "android")
-            createProjectConfigIfNeeded(webContentDir, ProjectType.ANDROID)
-        }
         else -> {
             copyTemplateFiles(context, webContentDir, "web")
             createProjectConfigIfNeeded(webContentDir, ProjectType.WEB)
@@ -81,7 +77,7 @@ fun ensureWorkspaceDirExists(path: String): File {
 }
 
 private enum class ProjectType {
-    WEB, NODE, TYPESCRIPT, PYTHON, JAVA, GO, OFFICE, ANDROID
+    WEB, NODE, TYPESCRIPT, PYTHON, JAVA, GO, OFFICE
 }
 
 private const val DEFAULT_WEB_PROJECT_CONFIG_JSON = """
@@ -425,99 +421,6 @@ private const val DEFAULT_OFFICE_PROJECT_CONFIG_JSON = """
 }
 """
 
-private const val DEFAULT_ANDROID_PROJECT_CONFIG_JSON = """
-{
-    "projectType": "android",
-    "title": "Android 项目",
-    "description": "基于 Jetpack Compose 的现代化 Android 应用开发，使用 Gradle Version Catalog 管理依赖",
-    "server": {
-        "enabled": false,
-        "port": 8080,
-        "autoStart": false
-    },
-    "preview": {
-        "type": "terminal",
-        "url": "",
-        "showPreviewButton": false
-    },
-    "commands": [
-        {
-            "id": "chmod_gradlew",
-            "label": "赋予执行权限",
-            "command": "chmod +x gradlew",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "install_android_sdk",
-            "label": "⬇️ 下载并配置 SDK",
-            "command": "SDK_DIR=\"${'$'}HOME/android/sdk\"; if [ -d \"${'$'}SDK_DIR/platform-tools\" ]; then echo '✅ 检测到已安装的 SDK'; echo \"SDK位置: ${'$'}SDK_DIR\"; echo \"sdk.dir=${'$'}SDK_DIR\" > local.properties; echo 'local.properties 已配置'; else echo '开始安装 Android SDK...'; ARCH=$(uname -m); if [ \"${'$'}ARCH\" = \"aarch64\" ] || [ \"${'$'}ARCH\" = \"arm64\" ]; then echo \"检测到 ARM64 架构，将安装 ARM64 版本工具\"; mkdir -p \"${'$'}SDK_DIR\" && cd \"${'$'}SDK_DIR\" && echo '正在下载 Command Line Tools...' && wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip && echo '正在解压...' && unzip -q cmdtools.zip && rm cmdtools.zip && mkdir -p cmdline-tools/latest && mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true && echo '正在安装 SDK 组件 (约500MB)...' && yes | cmdline-tools/latest/bin/sdkmanager --sdk_root=\"${'$'}SDK_DIR\" 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0' && cd - && echo \"sdk.dir=${'$'}SDK_DIR\" > local.properties && echo '✅ Android SDK 安装完成！' && echo \"SDK位置: ${'$'}SDK_DIR\" && echo 'local.properties 已配置'; else echo '⚠️ 非 ARM64 架构，请手动配置 SDK'; fi; fi",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_build",
-            "label": "🔨 构建项目",
-            "command": "./gradlew build || gradlew.bat build",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_assemble_debug",
-            "label": "📦 打包 Debug APK",
-            "command": "./gradlew assembleDebug || gradlew.bat assembleDebug",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_assemble_release",
-            "label": "📦 打包 Release APK",
-            "command": "./gradlew assembleRelease || gradlew.bat assembleRelease",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_install_debug",
-            "label": "📱 安装到设备 (Debug)",
-            "command": "./gradlew installDebug || gradlew.bat installDebug",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_test",
-            "label": "🧪 运行单元测试",
-            "command": "./gradlew test || gradlew.bat test",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_clean",
-            "label": "🧹 清理构建",
-            "command": "./gradlew clean || gradlew.bat clean",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_tasks",
-            "label": "📋 查看所有任务",
-            "command": "./gradlew tasks || gradlew.bat tasks",
-            "workingDir": ".",
-            "shell": true
-        },
-        {
-            "id": "gradle_dependencies",
-            "label": "📚 查看依赖树",
-            "command": "./gradlew :app:dependencies || gradlew.bat :app:dependencies",
-            "workingDir": ".",
-            "shell": true
-        }
-    ],
-    "export": {
-        "enabled": false
-    }
-}
-"""
-
 /**
  * 从 assets 复制项目模板文件到工作区
  */
@@ -610,7 +513,6 @@ private fun createProjectConfigIfNeeded(workspaceDir: File, projectType: Project
             ProjectType.JAVA -> DEFAULT_JAVA_PROJECT_CONFIG_JSON
             ProjectType.GO -> DEFAULT_GO_PROJECT_CONFIG_JSON
             ProjectType.OFFICE -> DEFAULT_OFFICE_PROJECT_CONFIG_JSON
-            ProjectType.ANDROID -> DEFAULT_ANDROID_PROJECT_CONFIG_JSON
         }
 
         try {
