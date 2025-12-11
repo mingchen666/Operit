@@ -801,19 +801,16 @@ open class StandardUITools(protected val context: Context) {
                         parseRelativePoint(element, screenWidth, screenHeight)
                                 ?: return fail(message = "Invalid element coordinates for Long Press: $element")
                 // 通过起点终点相同且较长duration的滑动来模拟长按
-                val swipeTool =
+                val longPressTool =
                         AITool(
-                                name = "swipe",
+                                name = "long_press",
                                 parameters =
                                         listOf(
-                                                ToolParameter("start_x", x.toString()),
-                                                ToolParameter("start_y", y.toString()),
-                                                ToolParameter("end_x", x.toString()),
-                                                ToolParameter("end_y", y.toString()),
-                                                ToolParameter("duration", "600")
+                                                ToolParameter("x", x.toString()),
+                                                ToolParameter("y", y.toString())
                                         )
                         )
-                val result = swipe(swipeTool)
+                val result = longPress(longPressTool)
                 if (result.success) ok() else fail(message = result.error ?: "Long press failed at ($x,$y)")
             }
             "Wait" -> {
