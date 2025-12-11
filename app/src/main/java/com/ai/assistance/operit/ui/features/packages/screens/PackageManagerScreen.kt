@@ -40,6 +40,8 @@ import com.ai.assistance.operit.core.tools.PackageTool
 import com.ai.assistance.operit.core.tools.ToolPackage
 import com.ai.assistance.operit.core.tools.packTool.PackageManager
 import com.ai.assistance.operit.data.mcp.MCPRepository
+import com.ai.assistance.operit.data.preferences.EnvPreferences
+import com.ai.assistance.operit.ui.features.packages.screens.mcp.components.MCPEnvironmentVariablesDialog
 import com.ai.assistance.operit.data.model.ToolResult
 import com.ai.assistance.operit.ui.features.packages.components.EmptyState
 import com.ai.assistance.operit.ui.features.packages.components.PackageTab
@@ -65,6 +67,8 @@ fun PackageManagerScreen(
     val scope = rememberCoroutineScope()
     val mcpRepository = remember { MCPRepository(context) }
 
+    val envPreferences = remember { EnvPreferences.getInstance(context) }
+
     // State for available and imported packages
     val availablePackages = remember { mutableStateOf<Map<String, ToolPackage>>(emptyMap()) }
     val importedPackages = remember { mutableStateOf<List<String>>(emptyList()) }
@@ -85,6 +89,10 @@ fun PackageManagerScreen(
 
     // Tab selection state
     var selectedTab by rememberSaveable { mutableStateOf(PackageTab.PACKAGES) }
+
+    // Environment variables dialog state
+    var showEnvDialog by remember { mutableStateOf(false) }
+    var envVariables by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
     // File picker launcher for importing external packages
     val packageFilePicker =
@@ -203,24 +211,45 @@ fun PackageManagerScreen(
             },
             floatingActionButton = {
                 if (selectedTab == PackageTab.PACKAGES) { // || selectedTab == PackageTab.AUTOMATION_CONFIGS) {
-                    FloatingActionButton(
-                            onClick = { packageFilePicker.launch("*/*") },
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier =
-                                    Modifier.shadow(
-                                            elevation = 6.dp,
-                                            shape = FloatingActionButtonDefaults.shape
-                                    )
-                    ) { 
-                        Icon(
-                            imageVector = Icons.Rounded.Add, 
-                            contentDescription = when (selectedTab) {
-                                PackageTab.PACKAGES -> context.getString(R.string.import_external_package)
-                                // PackageTab.AUTOMATION_CONFIGS -> "导入自动化配置"
-                                else -> context.getString(R.string.import_action)
-                            }
-                        ) 
+                    Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.End
+                    ) {
+                        // Environment variables management button
+                        SmallFloatingActionButton(
+                                onClick = {
+                                    envVariables = envPreferences.getAllEnv()
+                                    showEnvDialog = true
+                                },
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "管理环境变量"
+                            )
+                        }
+
+                        // Existing import package button
+                        FloatingActionButton(
+                                onClick = { packageFilePicker.launch("*/*") },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier =
+                                        Modifier.shadow(
+                                                elevation = 6.dp,
+                                                shape = FloatingActionButtonDefaults.shape
+                                        )
+                        ) {
+                            Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = when (selectedTab) {
+                                        PackageTab.PACKAGES -> context.getString(R.string.import_external_package)
+                                        // PackageTab.AUTOMATION_CONFIGS -> "导入自动化配置"
+                                        else -> context.getString(R.string.import_action)
+                                    }
+                            )
+                        }
                     }
                 }
             }
@@ -393,7 +422,8 @@ fun PackageManagerScreen(
 
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.spacedBy(1.dp)
+                                    verticalArrangement = Arrangement.spacedBy(1.dp),
+                                    contentPadding = PaddingValues(bottom = 120.dp) // Add padding to avoid FAB overlap
                                 ) {
                                     groupedPackages.forEach { (category, packagesInCategory) ->
                                         val categoryColor = when (category) {
@@ -521,6 +551,19 @@ fun PackageManagerScreen(
                         onDismiss = {
                             showScriptExecution = false
                             scriptExecutionResult = null
+                        }
+                )
+            }
+
+            // Environment Variables Dialog for packages
+            if (showEnvDialog) {
+                MCPEnvironmentVariablesDialog(
+                        environmentVariables = envVariables,
+                        onDismiss = { showEnvDialog = false },
+                        onConfirm = { updated ->
+                            envPreferences.setAllEnv(updated)
+                            envVariables = updated
+                            showEnvDialog = false
                         }
                 )
             }
